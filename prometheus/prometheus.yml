@@ -1,0 +1,27 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['lomemarket_postgres_exporter:9187']
+
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['lomemarket_mysqld_exporter:9104']
+
+  - job_name: 'mongodb'
+    static_configs:
+      - targets: ['lomemarket_mongodb_exporter:9216']
+
+  - job_name: 'airflow'
+    static_configs:
+      - targets: ['lomemarket_airflow_1:9095']
+
+rule_files:
+  - /etc/prometheus/rules/alerts.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['lomemarket_alertmanager:9093']

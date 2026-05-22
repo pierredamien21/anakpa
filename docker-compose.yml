@@ -1,0 +1,112 @@
+version: '3.8'
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: lomemarket_prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
+    ports:
+      - "9091:9090"
+    networks:
+      - lomemarket-network
+
+  postgres-exporter:
+    image: wrouesnel/postgres_exporter:latest
+    container_name: lomemarket_postgres_exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:dwh_postgres_2026@dwh-postgres:5432/lomemarket_dwh?sslmode=disable"
+    networks:
+      - lomemarket-network
+
+  mysqld-exporter:
+    image: prom/mysqld-exporter:latest
+    container_name: lomemarket_mysqld_exporter
+    environment:
+      DATA_SOURCE_NAME: "app_lmc:app_lmc_2026@tcp(mysql-lmc:3306)/"
+    networks:
+      - lomemarket-network
+    volumes:
+      - ./mysql/.my.cnf:/etc/.my.cnf:ro
+    command: ["--config.my-cnf=/etc/.my.cnf", "--web.listen-address=:9104"]
+
+  mongodb-exporter:
+    build:
+      context: ./mongo_exporter
+    container_name: lomemarket_mongodb_exporter
+    environment:
+      MONGODB_URI: "mongodb://exporter_lmag:exporter_lmag_2026@lomemarket-mongodb-lmag:27017/lomemarket_lmag"
+    networks:
+      - lomemarket-network
+
+  grafana:
+    image: grafana/grafana:9.5.8
+    container_name: lomemarket_grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_DISABLE_LOGIN_FORM: "false"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3001:3000"
+    networks:
+      - lomemarket-network
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: lomemarket_alertmanager
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    ports:
+      - "9093:9093"
+    networks:
+      - lomemarket-network
+
+  loki:
+    image: grafana/loki:2.8.2
+    container_name: lomemarket_loki
+    user: "0"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki/local-config.yaml:/etc/loki/local-config.yaml:ro
+      # no persistent mounts for now (tmpfs used for /tmp/loki in dev)
+    tmpfs:
+      - /tmp/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - lomemarket-network
+
+  promtail:
+    image: grafana/promtail:3.0.0
+    container_name: lomemarket_promtail
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/log:/var/log:ro
+      - ./promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/promtail.yml
+    networks:
+      - lomemarket-network
+
+  backup-cron:
+    image: alpine:3.18
+    container_name: lomemarket_backup_cron
+    networks:
+      - lomemarket-network
+    volumes:
+      - ../couche2-replication/scripts-backup:/opt/backups:ro
+    command: sh -c "apk add --no-cache bash >/dev/null 2>&1 || true; echo '0 3 * * * /opt/backups/backup_mysql.sh >> /var/log/backup_mysql.log 2>&1' > /etc/crontabs/root && echo '30 3 * * * /opt/backups/backup_postgres_dwh.sh >> /var/log/backup_postgres.log 2>&1' >> /etc/crontabs/root && echo '0 4 * * * /opt/backups/backup_mongo.sh >> /var/log/backup_mongo.log 2>&1' >> /etc/crontabs/root && crond -f -d 8"
+
+networks:
+  lomemarket-network:
+    external: true
+
+volumes:
+  loki_index:
+  loki_chunks:
+  loki_cache:
+  loki_compactor:
+  loki_wal:

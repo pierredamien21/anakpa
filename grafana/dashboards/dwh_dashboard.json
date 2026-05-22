@@ -1,0 +1,17 @@
+{
+  "id": null,
+  "title": "DWH Overview",
+  "panels": [
+    {
+      "type": "text",
+      "title": "DWH Counts",
+      "gridPos": {"h": 4, "w": 24, "x": 0, "y": 0},
+      "options": {
+        "mode": "markdown",
+        "content": "Use Prometheus exporter for metrics and Postgres datasource for live queries."
+      }
+    }
+  ],
+  "schemaVersion": 30,
+  "version": 1
+}
