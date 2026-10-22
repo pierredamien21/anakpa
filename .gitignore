@@ -1,3 +1,6 @@
 .env
 mysql/.my.cnf
 __pycache__/
+loki/wal/
+loki/index/
+loki/chunks/
