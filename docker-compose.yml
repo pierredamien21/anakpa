@@ -15,7 +15,7 @@ services:
     image: wrouesnel/postgres_exporter:latest
     container_name: lomemarket_postgres_exporter
     environment:
-      DATA_SOURCE_NAME: "postgresql://postgres:dwh_postgres_2026@dwh-postgres:5432/lomemarket_dwh?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://postgres:${DWH_POSTGRES_PASSWORD}@dwh-postgres:5432/lomemarket_dwh?sslmode=disable"
     networks:
       - lomemarket-network
 
@@ -23,7 +23,7 @@ services:
     image: prom/mysqld-exporter:latest
     container_name: lomemarket_mysqld_exporter
     environment:
-      DATA_SOURCE_NAME: "app_lmc:app_lmc_2026@tcp(mysql-lmc:3306)/"
+      DATA_SOURCE_NAME: "app_lmc:${MYSQL_EXPORTER_PASSWORD}@tcp(mysql-lmc:3306)/"
     networks:
       - lomemarket-network
     volumes:
@@ -35,7 +35,7 @@ services:
       context: ./mongo_exporter
     container_name: lomemarket_mongodb_exporter
     environment:
-      MONGODB_URI: "mongodb://exporter_lmag:exporter_lmag_2026@lomemarket-mongodb-lmag:27017/lomemarket_lmag"
+      MONGODB_URI: "mongodb://exporter_lmag:${MONGO_EXPORTER_PASSWORD}@lomemarket-mongodb-lmag:27017/lomemarket_lmag"
     networks:
       - lomemarket-network
 
@@ -43,7 +43,7 @@ services:
     image: grafana/grafana:9.5.8
     container_name: lomemarket_grafana
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
       GF_AUTH_DISABLE_LOGIN_FORM: "false"
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:

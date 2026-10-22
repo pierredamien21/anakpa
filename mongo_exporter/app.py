@@ -3,7 +3,7 @@ import time
 from prometheus_client import start_http_server, Gauge
 from pymongo import MongoClient
 
-MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://exporter_lmag:exporter_lmag_2026@lomemarket-mongodb-lmag:27017/admin')
+MONGODB_URI = os.environ['MONGODB_URI']
 
 UP = Gauge('mongodb_up', 'MongoDB up (1 = up, 0 = down)')
 COLLECTIONS = Gauge('mongodb_collections_count', 'Number of collections in monitored DB')

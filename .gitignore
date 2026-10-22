@@ -1,0 +1,3 @@
+.env
+mysql/.my.cnf
+__pycache__/
